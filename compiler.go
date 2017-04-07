@@ -17,6 +17,20 @@ import (
 	"time"
 )
 
+/*
+
+this is just a tiny "compiler" to compress & merge scripts/css/json/html files together, nothing fancy.
+You could actually use proper tools to achieve what this does, and probably better.. But this was fun to write
+
+
+
+
+----
+some files are prefixed with number__ (ie, 1__head.html) for ordering of the merge
+lower number at the beginning is being sorted as higher priority and being appended to the target file first
+----
+*/
+
 var targetDir = "compiled"
 var base = ""
 
@@ -44,6 +58,9 @@ func main() {
 
 	/*
 		list of sources & targets
+		<mime> => parser{}
+		targgetfile: target file in compiled directory
+		sourcefolder: source folder of the files for this mime.
 	*/
 	x := map[string]parser{
 		"text/javascript":  {targetFile: "scripts.js", sourceFolder: base + "js"},
@@ -118,7 +135,7 @@ func readDir(directory string, c chan []byte, log zl.Log) {
 	}
 
 	defer func() {
-		log.Write("Finished scanning %s - took %d MS", directory, ((time.Now().UnixNano() - start) / int64(time.Millisecond)))
+		log.Write("Finished scanning %s  --  took %dms", directory, ((time.Now().UnixNano() - start) / int64(time.Millisecond)))
 		close(c)
 	}()
 
