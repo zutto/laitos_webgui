@@ -41,7 +41,6 @@ func main() {
 		base = "./"
 	}
 	targetDir = base + targetDir
-	log.Write(targetDir)
 
 	/*
 		list of sources & targets
@@ -81,9 +80,6 @@ func main() {
 			os.Exit(1)
 		}
 	}
-
-	log.Write("running minicompiler!")
-
 }
 
 func writeBuffer(ch chan []byte, mediaType string, t string, done chan bool, log zl.Log) {
