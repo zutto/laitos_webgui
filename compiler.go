@@ -6,15 +6,19 @@ import (
 	"github.com/tdewolff/minify/css"
 	"github.com/tdewolff/minify/html"
 	"github.com/tdewolff/minify/js"
+	"github.com/tdewolff/minify/json"
 	"github.com/zutto/zlog/zl"
 	"io/ioutil"
 	"os"
+	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"time"
 )
 
-var targetDir = "./compiled"
+var targetDir = "compiled"
+var base = ""
 
 var m *minify.M
 
@@ -26,18 +30,37 @@ type parser struct {
 func main() {
 	log := zl.GenericLog{}
 
+	if len(os.Args) > 1 {
+		curd, err := filepath.Abs(filepath.Dir(os.Args[1]))
+		if err != nil {
+			panic("Failed to get executable dir")
+		}
+
+		base = curd + "/"
+	} else {
+		base = "./"
+	}
+	targetDir = base + targetDir
+	log.Write(targetDir)
+
 	/*
 		list of sources & targets
 	*/
 	x := map[string]parser{
-		"text/javascript": {targetFile: "scripts.js", sourceFolder: "./js"},
-		"text/css":        {targetFile: "styles.css", sourceFolder: "./css"},
-		"text/html":       {targetFile: "index.html", sourceFolder: "./html"}}
+		"text/javascript":  {targetFile: "scripts.js", sourceFolder: base + "js"},
+		"text/css":         {targetFile: "styles.css", sourceFolder: base + "css"},
+		"text/html":        {targetFile: "index.html", sourceFolder: base + "html"},
+		"application/json": {targetFile: "manifest.json", sourceFolder: base + "json"}}
 
 	m = minify.New()
+
 	m.AddFunc("text/css", css.Minify)
-	m.AddFunc("text/html", html.Minify)
+	m.AddFuncRegexp(regexp.MustCompile("[/+]json$"), json.Minify)
 	m.AddFunc("text/javascript", js.Minify)
+	m.Add("text/html", &html.Minifier{
+		KeepDocumentTags:    true,
+		KeepDefaultAttrVals: true,
+	})
 
 	rpinger := make(chan bool)
 
